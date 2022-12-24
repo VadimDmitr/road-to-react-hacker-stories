@@ -20,7 +20,7 @@ const App = () => {
     },
   ];
 
-  const [searchTerm, setSearchTerm] = React.useState('');
+const [searchTerm, setSearchTerm] = React.useState('');
   
   const handleSearch = (event) => {
     console.log (event.target.value);
