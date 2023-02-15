@@ -287,7 +287,7 @@ const Item = ({ item, onRemoveItem }) => (
         onClick={() => onRemoveItem(item)}
         className={`${styles.button} ${styles.buttonSmall}`}>
       
-        <Check height="18px" width="18px"/>
+        <Check height="18px" width="18px" />
       </StyledButtonSmall>
     </StyledColumn>
   </StyledItem>
