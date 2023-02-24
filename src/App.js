@@ -175,12 +175,12 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = React.useCallback((item) => {
     dispatchStories({
       type: 'REMOVE_STORY',
       payload: item,
     });
-  };
+  },[]);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
@@ -268,7 +268,8 @@ const InputWithLabel = ({
   );
 };
 
-const List = ({ list, onRemoveItem }) => (
+const List = React.memo(
+  ({ list, onRemoveItem }) => (
   <ul>
     {list.map((item) => (
       <Item
@@ -278,6 +279,7 @@ const List = ({ list, onRemoveItem }) => (
       />
     ))}
   </ul>
+  )
 );
 
 const Item = ({ item, onRemoveItem }) => (
