@@ -1,92 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
-import styles from './App.module.css';
-/*import cs from 'classnames';*/
-import styled from 'styled-components';
-import { ReactComponent as Check } from './check.svg';
-
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
-
-const StyledContainer = styled.div`
-  height: 100vw; 
-  padding: 20px;
-
-  background: #83a4d4; /* fallback for old browsers */ 
-  background: linear-gradient(to left, #b6fbff, #83a4d4);
-
-  color: #171212;
-`;
-
-const StyledHeadlinePrimary = styled.h1`
-  font-size: 48px; 
-  font-weight: 300; 
-  letter-spacing: 2px;
-`;
-
-const StyledItem = styled.li`
-  display: flex; 
-  align-items: center; 
-  padding-bottom: 5px;
-`;
-
-const StyledColumn = styled.span`
-  padding: 0 5px; 
-  white-space: nowrap; 
-  overflow: hidden; 
-  white-space: nowrap; 
-  text-overflow: ellipsis;
-}
-
-  a { 
-color: inherit;
-  }
-
-  width: ${(props) => props.width};
-`;
-
-const StyledButton = styled.button`
-  background: transparent; 
-  border: 1px solid #171212; 
-  padding: 5px;
-  cursor: pointer;
-
-  transition: all 0.1s ease-in; 
-}
-
-  &:hover { 
-  background: #171212; 
-  color: #ffffff;
-}
-`;
-
-const StyledButtonSmall = styled(StyledButton)`
-  padding: 5px;
-`;
-
-const StyledButtonLarge = styled(StyledButton)`
-  padding: 10px;
-`;
-
-const StyledSearchForm = styled.form`
-  padding: 10px 0 20px 0; 
-  display: flex; 
-  align-items: baseline;
-`;
-
-const StyledLabel = styled.label`
-  border-top: 1px solid #171212; 
-  border-left: 1px solid #171212; 
-  padding-left: 5px;
-  font-size: 24px; 
-`;
-
-const StyledInput = styled.input`
-  border: none;
-  border-bottom: 1px solid #171212; 
-  background-color: transparent;
-  font-size: 24px; }
-`;
 
 const useSemiPersistentState = (key, initialState) => {
   const isMounted = React.useRef(false);
@@ -98,11 +13,11 @@ const useSemiPersistentState = (key, initialState) => {
   React.useEffect(() => {
     if (!isMounted.current) {
       isMounted.current = true;
-  } else {
+    } else {
       console.log('A');
       localStorage.setItem(key, value);
-  }
-    }, [value, key]);
+    }
+  }, [value, key]);
 
   return [value, setValue];
 };
@@ -140,6 +55,15 @@ const storiesReducer = (state, action) => {
   }
 };
 
+const getSumComments = (stories) => {
+  console.log('C');
+
+  return stories.data.reduce(
+    (result, value) => result + value.num_comments,
+    0
+  );
+};
+
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState(
     'search',
@@ -160,16 +84,15 @@ const App = () => {
 
     try {
       const result = await axios.get(url);
-      //.then((response) => response.json())
-      //.then((result) => {
-        dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
-          payload: result.data.hits,
-        });
-      } catch {
-        dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
-      }
-    }, [url]);
+
+      dispatchStories({
+        type: 'STORIES_FETCH_SUCCESS',
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
+    }
+  }, [url]);
 
   React.useEffect(() => {
     handleFetchStories();
@@ -180,7 +103,7 @@ const App = () => {
       type: 'REMOVE_STORY',
       payload: item,
     });
-  },[]);
+  }, []);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
@@ -192,15 +115,23 @@ const App = () => {
     event.preventDefault();
   };
 
+  console.log('B:App');
+
+  const sumComments = React.useMemo(() => getSumComments(stories), [
+    stories,
+  ]);
+
   return (
-    <StyledContainer>
-      <StyledHeadlinePrimary>My Hacker Stories</StyledHeadlinePrimary>
+    <div>
+      <h1>My Hacker Stories with {sumComments} comments.</h1>
 
       <SearchForm
-      searchTerm={searchTerm}
-      onSearchInput={handleSearchInput}
-      onSearchSubmit={handleSearchSubmit}
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
       />
+
+      <hr />
 
       {stories.isError && <p>Something went wrong ...</p>}
 
@@ -209,7 +140,7 @@ const App = () => {
       ) : (
         <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
-    </StyledContainer>
+    </div>
   );
 };
 
@@ -218,23 +149,21 @@ const SearchForm = ({
   onSearchInput,
   onSearchSubmit,
 }) => (
+  <form onSubmit={onSearchSubmit}>
+    <InputWithLabel
+      id="search"
+      value={searchTerm}
+      isFocused
+      onInputChange={onSearchInput}
+    >
+      <strong>Search:</strong>
+    </InputWithLabel>
 
-<StyledSearchForm onSubmit={onSearchSubmit} className={styles.searchForm}>
-  <InputWithLabel
-    id="search"
-    value={searchTerm}
-    isFocused
-    onInputChange={onSearchInput}
-  >
-    <strong>Search:</strong>
-  </InputWithLabel>
-  
-  <StyledButtonLarge type="submit"  disabled={!searchTerm} /*className={cs(styles.button, styles.buttonLarge)}*/>
-  Submit
-  </StyledButtonLarge>
-</StyledSearchForm>
+    <button type="submit" disabled={!searchTerm}>
+      Submit
+    </button>
+  </form>
 );
-
 
 const InputWithLabel = ({
   id,
@@ -254,52 +183,48 @@ const InputWithLabel = ({
 
   return (
     <>
-      <StyledLabel htmlFor={id} /*</>className={styles.label}*/> {children}</StyledLabel>
+      <label htmlFor={id}>{children}</label>
       &nbsp;
-      <StyledInput
+      <input
         id={id}
         ref={inputRef}
         type={type}
         value={value}
         onChange={onInputChange}
-        /*className={styles.input}*/
       />
     </>
   );
 };
 
 const List = React.memo(
-  ({ list, onRemoveItem }) => (
-  <ul>
-    {list.map((item) => (
-      <Item
-        key={item.objectID}
-        item={item}
-        onRemoveItem={onRemoveItem}
-      />
-    ))}
-  </ul>
-  )
+  ({ list, onRemoveItem }) =>
+    console.log('B:List') || (
+      <ul>
+        {list.map((item) => (
+          <Item
+            key={item.objectID}
+            item={item}
+            onRemoveItem={onRemoveItem}
+          />
+        ))}
+      </ul>
+    )
 );
 
 const Item = ({ item, onRemoveItem }) => (
-  <StyledItem>
-    <StyledColumn width='40%'>
+  <li>
+    <span>
       <a href={item.url}>{item.title}</a>
-    </StyledColumn>
-    <StyledColumn width = '30%'>{item.author}</StyledColumn>
-    <StyledColumn width = '10%'>{item.num_comments}</StyledColumn>
-    <StyledColumn width = '10%'>{item.points}</StyledColumn>
-    <StyledColumn width = '10%'>
-      <StyledButtonSmall 
-        type="button"
-        onClick={() => onRemoveItem(item)}
-        className={`${styles.button} ${styles.buttonSmall}`}>
-      
-        <Check height="18px" width="18px" />
-      </StyledButtonSmall>
-    </StyledColumn>
-  </StyledItem>
+    </span>
+    <span>{item.author}</span>
+    <span>{item.num_comments}</span>
+    <span>{item.points}</span>
+    <span>
+      <button type="button" onClick={() => onRemoveItem(item)}>
+        Dismiss
+      </button>
+    </span>
+  </li>
 );
 
 export default App;
